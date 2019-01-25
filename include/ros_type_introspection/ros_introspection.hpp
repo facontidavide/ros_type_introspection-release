@@ -55,7 +55,9 @@ struct FlatMessage {
   /// This list will be filled by the funtion buildRosFlatType.
   std::vector< std::pair<StringTreeLeaf, std::string> > name;
 
-  // Not used yet
+  /// Store "blobs", i.e all those fields which are vectors of BYTES (AKA uint8_t),
+  /// where the vector size is greater than the argument [max_array_size]
+  /// passed  to the function deserializeIntoFlatContainer
   std::vector< std::pair<StringTreeLeaf, std::vector<uint8_t>>> blob;
 };
 
@@ -64,7 +66,12 @@ typedef std::vector< std::pair<std::string, Variant> > RenamedValues;
 class Parser{
 
 public:
-  Parser(): _global_warnings(&std::cerr), _rule_cache_dirty(true) {}
+  Parser(): _rule_cache_dirty(true), _global_warnings(&std::cerr), _discard_large_array(true) {}
+
+  void setMaxArrayPolicy( bool discard_entire_array )
+  {
+      _discard_large_array = discard_entire_array;
+  }
 
   /**
    * @brief A single message definition will (most probably) generate myltiple ROSMessage(s).
@@ -210,6 +217,7 @@ private:
   std::vector<int> _alias_array_pos;
   std::vector<std::string> _formatted_string;
   std::vector<int8_t> _substituted;
+  bool _discard_large_array;
 };
 
 }
