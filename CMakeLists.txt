@@ -8,12 +8,11 @@ find_package(catkin REQUIRED COMPONENTS
    roscpp 
    rostime 
    roscpp_serialization
+   abseil_cpp
 )
 
 # Build flags
-set(CMAKE_CXX_FLAGS "-std=c++11 -fPIC ${CMAKE_CXX_FLAGS}")
-
-add_subdirectory(abseil-cpp)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 ")
 
 ###################################
 ## catkin specific configuration ##
@@ -31,6 +30,7 @@ catkin_package(
    roscpp 
    rostime 
    roscpp_serialization
+   abseil_cpp
    DEPENDS 
 )
 
@@ -57,11 +57,7 @@ include_directories(
    src/ros_introspection.cpp
  )
 
-target_link_libraries(ros_type_introspection
-    ${catkin_LIBRARIES}
-    absl::base
-    absl::strings
-    )
+target_link_libraries(ros_type_introspection ${catkin_LIBRARIES})
 
 
 #############
