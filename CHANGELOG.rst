@@ -2,9 +2,9 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.4.0 (2019-04-08)
+1.3.2 (2019-04-17)
 ------------------
-* embedding abseil-cpp
+* fix issue `#35 <https://github.com/facontidavide/ros_type_introspection/issues/35>`_
 * Contributors: Davide Faconti
 
 1.3.1 (2019-03-24)
