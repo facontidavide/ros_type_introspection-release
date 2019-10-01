@@ -95,12 +95,12 @@ void Parser::createTrees(ROSMessageInfo& info, const std::string &type_name) con
                         info.message_tree.root());
 }
 
-inline bool operator ==( const std::string& a, const absl::string_view& b)
+inline bool operator ==( const std::string& a, const boost::string_ref& b)
 {
   return (  a.size() == b.size() && std::strncmp( a.data(), b.data(), a.size()) == 0);
 }
 
-inline bool FindPattern(const std::vector<absl::string_view> &pattern,
+inline bool FindPattern(const std::vector<boost::string_ref> &pattern,
                         size_t index, const StringTreeNode *tail,
                         const StringTreeNode **head)
 {
@@ -197,7 +197,7 @@ void Parser::registerMessageDefinition(const std::string &msg_definition,
   }
   _rule_cache_dirty = true;
 
-  const boost::regex msg_separation_regex("^=+\\n+");
+  const boost::regex msg_separation_regex("^\\s*=+\\n+");
 
   std::vector<std::string> split;
   std::vector<const ROSType*> all_types;
@@ -256,7 +256,7 @@ const ROSMessage* Parser::getMessageByType(const ROSType &type, const ROSMessage
 
 void Parser::applyVisitorToBuffer(const std::string &msg_identifier,
                                   const ROSType& monitored_type,
-                                  absl::Span<uint8_t> &buffer,
+                                  Span<uint8_t> &buffer,
                                   Parser::VisitingCallback callback) const
 {
   const ROSMessageInfo* msg_info = getMessageInfo(msg_identifier);
@@ -319,7 +319,7 @@ void Parser::applyVisitorToBuffer(const std::string &msg_identifier,
     } // end for fields
     if( matching )
     {
-      absl::Span<uint8_t> view( prev_buffer_ptr, buffer_offset - prev_offset);
+      Span<uint8_t> view( prev_buffer_ptr, buffer_offset - prev_offset);
       callback( monitored_type, view );
     }
   }; //end lambda
@@ -329,7 +329,7 @@ void Parser::applyVisitorToBuffer(const std::string &msg_identifier,
 }
 
 bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
-                                          absl::Span<uint8_t> buffer,
+                                          Span<uint8_t> buffer,
                                           FlatMessage* flat_container,
                                           const uint32_t max_array_size ) const
 {
@@ -340,6 +340,8 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
   size_t value_index = 0;
   size_t name_index = 0;
   size_t blob_index = 0;
+  size_t blob_storage_index = 0;
+
 
   if( msg_info == nullptr)
   {
@@ -394,7 +396,7 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
         }
       }
 
-      if( IS_BLOB ) // special case. This is a "blob", typically an image, a map, etc.
+      if( IS_BLOB ) // special case. This is a "blob", typically an image, a map, pointcloud, etc.
       {
         if( flat_container->blob.size() <= blob_index)
         {
@@ -408,10 +410,27 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
         if( DO_STORE )
         {
           flat_container->blob[blob_index].first  = new_tree_leaf ;
-          std::vector<uint8_t>& blob = flat_container->blob[blob_index].second;
+          auto& blob = flat_container->blob[blob_index].second;
           blob_index++;
-          blob.resize( array_size );
-          std::memcpy( blob.data(), &buffer[buffer_offset], array_size);
+
+          if( _blob_policy == STORE_BLOB_AS_COPY)
+          {
+            if( flat_container->blob_storage.size() <= blob_storage_index)
+            {
+              const size_t increased_size = std::max( size_t(8), flat_container->blob_storage.size() * 2);
+              flat_container->blob_storage.resize( increased_size );
+            }
+
+            auto& storage = flat_container->blob_storage[blob_storage_index];
+            storage.resize(array_size);
+            std::memcpy(storage.data(), &buffer[buffer_offset], array_size);
+            blob_storage_index++;
+
+            blob = absl::Span<uint8_t>( storage.data(), storage.size() );
+          }
+          else{
+            blob = absl::Span<uint8_t>( &buffer[buffer_offset], array_size);
+          }
         }
         buffer_offset += array_size;
       }
@@ -493,20 +512,26 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
   flat_container->name.resize( name_index );
   flat_container->value.resize( value_index );
   flat_container->blob.resize( blob_index );
+  flat_container->blob_storage.resize( blob_storage_index );
 
   if( buffer_offset != buffer.size() )
   {
-    throw std::runtime_error("buildRosFlatType: There was an error parsing the buffer" );
+      char msg_buff[1000];
+      sprintf(msg_buff, "buildRosFlatType: There was an error parsing the buffer.\n"
+                      "Size %d != %d, while parsing [%s]",
+              (int) buffer_offset, (int)buffer.size(), msg_identifier.c_str() );
+
+      throw std::runtime_error(msg_buff);
   }
   return entire_message_parse;
 }
 
-inline bool isNumberPlaceholder( const absl::string_view& s)
+inline bool isNumberPlaceholder( const boost::string_ref& s)
 {
   return s.size() == 1 && s[0] == '#';
 }
 
-inline bool isSubstitutionPlaceholder( const absl::string_view& s)
+inline bool isSubstitutionPlaceholder( const boost::string_ref& s)
 {
   return s.size() == 1 && s[0] == '@';
 }
@@ -563,7 +588,8 @@ inline void JoinStrings( const VectorType& vect, const char separator, std::stri
 
 void Parser::applyNameTransform(const std::string& msg_identifier,
                                 const FlatMessage& container,
-                                RenamedValues *renamed_value )
+                                RenamedValues *renamed_value,
+                                bool skip_topicname)
 {
   if( _rule_cache_dirty )
   {
@@ -637,7 +663,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
           //--------------------------
           if( new_name )
           {
-            absl::InlinedVector<absl::string_view, 12> concatenated_name;
+            boost::container::small_vector<boost::string_ref, 12> concatenated_name;
 
             const StringTreeNode* node_ptr = leaf.node_ptr;
 
@@ -645,7 +671,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
             while( node_ptr != pattern_head)
             {
-              const absl::string_view& str_val = node_ptr->value();
+              const boost::string_ref& str_val = node_ptr->value();
 
               if( isNumberPlaceholder( str_val ) )
               {
@@ -663,7 +689,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
             for (int s = rule->substitution().size()-1; s >= 0; s--)
             {
-              const absl::string_view& str_val = rule->substitution()[s];
+              const boost::string_ref& str_val = rule->substitution()[s];
 
               if( isSubstitutionPlaceholder(str_val) )
               {
@@ -680,7 +706,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
             while( node_ptr )
             {
-              absl::string_view str_val = node_ptr->value();
+              boost::string_ref str_val = node_ptr->value();
 
               if( isNumberPlaceholder(str_val) )
               {
@@ -698,6 +724,11 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
             //------------------------
             auto& renamed_pair = (*renamed_value)[value_index];
+
+            if( skip_topicname )
+            {
+                concatenated_name.pop_back();
+            }
 
             std::reverse(concatenated_name.begin(), concatenated_name.end());
             JoinStrings( concatenated_name, '/', renamed_pair.first);
@@ -718,7 +749,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
       const std::pair<StringTreeLeaf, Variant> & value_leaf = container.value[value_index];
 
       std::string& destination = (*renamed_value)[value_index].first;
-      value_leaf.first.toStr( destination );
+      destination = CreateStringFromTreeLeaf( value_leaf.first, skip_topicname );
       (*renamed_value)[value_index].second = value_leaf.second ;
     }
   }

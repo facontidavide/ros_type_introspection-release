@@ -36,10 +36,9 @@
 #define ROS_INTROSPECTION_HPP
 
 #include <unordered_set>
-#include "ros_type_introspection/stringtree_leaf.hpp"
-#include "ros_type_introspection/substitution_rule.hpp"
-#include "ros_type_introspection/helper_functions.hpp"
-#include "absl/types/span.h"
+#include <ros_type_introspection/stringtree_leaf.hpp>
+#include <ros_type_introspection/substitution_rule.hpp>
+#include <ros_type_introspection/helper_functions.hpp>
 
 namespace RosIntrospection{
 
@@ -59,7 +58,9 @@ struct FlatMessage {
   /// Store "blobs", i.e all those fields which are vectors of BYTES (AKA uint8_t),
   /// where the vector size is greater than the argument [max_array_size]
   /// passed  to the function deserializeIntoFlatContainer
-  std::vector< std::pair<StringTreeLeaf, std::vector<uint8_t>>> blob;
+  std::vector< std::pair<StringTreeLeaf, absl::Span<uint8_t>>> blob;
+
+  std::vector<std::vector<uint8_t>> blob_storage;
 };
 
 typedef std::vector< std::pair<std::string, Variant> > RenamedValues;
@@ -67,11 +68,48 @@ typedef std::vector< std::pair<std::string, Variant> > RenamedValues;
 class Parser{
 
 public:
-  Parser(): _rule_cache_dirty(true), _global_warnings(&std::cerr), _discard_large_array(true) {}
+  Parser(): _rule_cache_dirty(true),
+            _global_warnings(&std::cerr),
+            _discard_large_array(DISCARD_LARGE_ARRAYS),
+            _blob_policy(STORE_BLOB_AS_COPY)
+ {}
+
+  enum MaxArrayPolicy: bool {
+    DISCARD_LARGE_ARRAYS = true,
+    KEEP_LARGE_ARRAYS = false
+  };
+
+  void setMaxArrayPolicy( MaxArrayPolicy discard_entire_array )
+  {
+      _discard_large_array = discard_entire_array;
+  }
 
   void setMaxArrayPolicy( bool discard_entire_array )
   {
-      _discard_large_array = discard_entire_array;
+    _discard_large_array = static_cast<MaxArrayPolicy>(discard_entire_array);
+  }
+
+  MaxArrayPolicy maxArrayPolicy() const
+  {
+    return _discard_large_array;
+  }
+
+  enum BlobPolicy {
+    STORE_BLOB_AS_COPY,
+    STORE_BLOB_AS_REFERENCE};
+
+  // If set to STORE_BLOB_AS_COPY, a copy of the original vector will be stored in the FlatMessage.
+  // This may have a large impact on performance.
+  // if STOR_BLOB_AS_REFERENCE is used instead, it is dramatically faster, but you must be careful with
+  // dangling pointers.
+  void setBlobPolicy( BlobPolicy policy )
+  {
+    _blob_policy = policy;
+  }
+
+  BlobPolicy blobPolicy() const
+  {
+    return _blob_policy;
   }
 
   /**
@@ -141,7 +179,7 @@ public:
    * skipped because an array has (size > max_array_size)
    */
   bool deserializeIntoFlatContainer(const std::string& msg_identifier,
-                                    absl::Span<uint8_t> buffer,
+                                    Span<uint8_t> buffer,
                                     FlatMessage* flat_container_output,
                                     const uint32_t max_array_size ) const;
 
@@ -167,9 +205,9 @@ public:
    */
   void applyNameTransform(const std::string& msg_identifier,
                           const FlatMessage& container,
-                          RenamedValues* renamed_value );
+                          RenamedValues* renamed_value , bool dont_add_topicname = false);
 
-  typedef std::function<void(const ROSType&, absl::Span<uint8_t>&)> VisitingCallback;
+  typedef std::function<void(const ROSType&, Span<uint8_t>&)> VisitingCallback;
 
   /**
    * @brief applyVisitorToBuffer is used to pass a callback that is invoked every time
@@ -184,11 +222,11 @@ public:
    * @param callback          The callback.
    */
   void applyVisitorToBuffer(const std::string& msg_identifier, const ROSType &monitored_type,
-                            absl::Span<uint8_t> &buffer,
+                            Span<uint8_t> &buffer,
                             VisitingCallback callback) const;
 
   template <typename T>
-  T extractField(const std::string& msg_identifier, const absl::Span<uint8_t> &buffer);
+  T extractField(const std::string& msg_identifier, const Span<uint8_t> &buffer);
 
 
   /// Change where the warning messages are displayed.
@@ -222,14 +260,15 @@ private:
   std::vector<int> _alias_array_pos;
   std::vector<std::string> _formatted_string;
   std::vector<int8_t> _substituted;
-  bool _discard_large_array;
+  MaxArrayPolicy _discard_large_array;
+  BlobPolicy _blob_policy;
 };
 
 //---------------------------------------------------
 
 template<typename T> inline
 T Parser::extractField(const std::string &msg_identifier,
-                       const absl::Span<uint8_t> &buffer)
+                       const Span<uint8_t> &buffer)
 {
     T out;
     bool found = false;
