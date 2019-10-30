@@ -1,0 +1,250 @@
+ros-melodic-ros-type-introspection (2.0.3-1stretch) stretch; urgency=high
+
+  * critical bug fix
+  * fix warning
+    Fix sign comparison warnings
+  * Fixed -Wsign-compare warnings
+  * Contributors: Davide Faconti, Jarvis Schultz
+
+ -- Davide Faconti <davide.faconti@gmail.com>  Tue, 29 Oct 2019 23:00:00 -0000
+
+ros-melodic-ros-type-introspection (2.0.2-1stretch) stretch; urgency=high
+
+  * speed optimization (fix regression in 2.0)
+  * Contributors: Davide Faconti
+
+ -- Davide Faconti <davide.faconti@gmail.com>  Mon, 30 Sep 2019 22:00:00 -0000
+
+ros-melodic-ros-type-introspection (2.0.1-1stretch) stretch; urgency=high
+
+  * fix (old abseil stuff)
+  * Contributors: Davide Faconti
+
+ -- Davide Faconti <davide.faconti@gmail.com>  Mon, 30 Sep 2019 22:00:00 -0000
+
+ros-melodic-ros-type-introspection (2.0.0-1stretch) stretch; urgency=high
+
+  * removed abseil
+  * Merge branch 'master' of https://github.com/facontidavide/ros_type_introspection
+  * minor changes in the API
+  * Fix issue #38 <https://github.com/facontidavide/ros_type_introspection/issues/38>
+  * Contributors: Davide Faconti
+
+ -- Davide Faconti <davide.faconti@gmail.com>  Mon, 30 Sep 2019 22:00:00 -0000
+
+ros-melodic-ros-type-introspection (1.3.3-1stretch) stretch; urgency=high
+
+  * fix issue #36 <https://github.com/facontidavide/ros_type_introspection/issues/36>
+  * Contributors: Davide Faconti
+
+ -- Davide Faconti <faconti@icarustechnology.com>  Thu, 09 May 2019 22:00:00 -0000
+
+ros-melodic-ros-type-introspection (1.3.2-1stretch) stretch; urgency=high
+
+  * fix issue #35 <https://github.com/facontidavide/ros_type_introspection/issues/35>
+  * Contributors: Davide Faconti
+
+ -- Davide Faconti <faconti@icarustechnology.com>  Tue, 16 Apr 2019 22:00:00 -0000
+
+ros-melodic-ros-type-introspection (1.3.1-1stretch) stretch; urgency=high
+
+  * Merge pull request #32 <https://github.com/facontidavide/ros_type_introspection/issues/32> from aeudes/fix_large_array
+  * Fix invalid clamp and discard beaviour.
+  * Contributors: Alexandre Eudes, Davide Faconti
+
+ -- Davide Faconti <faconti@icarustechnology.com>  Sat, 23 Mar 2019 23:00:00 -0000
+
+ros-melodic-ros-type-introspection (1.3.0-1stretch) stretch; urgency=high
+
+  * adding new policy
+  * fix compiler warnings
+  * added comment
+  * Contributors: Davide Faconti, Robert Haschke, YiweiHan, janEbert
+
+ -- Davide Faconti <faconti@icarustechnology.com>  Thu, 24 Jan 2019 23:00:00 -0000
+
+ros-melodic-ros-type-introspection (1.2.0-1stretch) stretch; urgency=high
+
+  * fixed -Wreorder (#24 <https://github.com/facontidavide/ros_type_introspection/issues/24>)
+    * client code can now compile with -Werror
+  * solved compilation problem when convert_impl<float, float>
+  * Update README.md
+  * Contributors: Davide Faconti, moooeeeep
+
+ -- Davide Faconti <faconti@icarustechnology.com>  Sun, 11 Nov 2018 23:00:00 -0000
+
+ros-melodic-ros-type-introspection (1.1.1-1stretch) stretch; urgency=high
+
+  * split the project into two packages to reduce dependencies
+  * Contributors: Davide Faconti
+
+ -- Davide Faconti <faconti@icarustechnology.com>  Sat, 14 Apr 2018 22:00:00 -0000
+
+ros-melodic-ros-type-introspection (1.1.0-1stretch) stretch; urgency=high
+
+  * critical bug fix
+  * fixed compilation of test
+  * remove potential problem in other projects
+  * Contributors: Davide Faconti
+
+ -- Davide Faconti <faconti@icarustechnology.com>  Wed, 21 Mar 2018 23:00:00 -0000
+
+ros-melodic-ros-type-introspection (1.0.2-1stretch) stretch; urgency=high
+
+  * fixing issue with blobs (detected when parsing sensor_msgs::Image)
+  * added test for sensor image
+  * Contributors: Davide Faconti
+
+ -- Davide Faconti <faconti@icarustechnology.com>  Wed, 07 Feb 2018 23:00:00 -0000
+
+ros-melodic-ros-type-introspection (1.0.1-1stretch) stretch; urgency=high
+
+  * added return value to deserializeIntoFlatContainer
+  * bug fix
+  * fix compilation issue
+  * fix potential issue with static variables
+  * Contributors: Davide Faconti
+
+ -- Davide Faconti <faconti@icarustechnology.com>  Mon, 13 Nov 2017 23:00:00 -0000
+
+ros-melodic-ros-type-introspection (1.0.0-1stretch) stretch; urgency=high
+
+  * Complete refactoring
+  * Contributors: Davide Faconti, Kartik Mohta, Ian Taylor, Mehdi Tlili
+
+ -- Davide Faconti <faconti@icarustechnology.com>  Wed, 11 Oct 2017 22:00:00 -0000
+
+ros-melodic-ros-type-introspection (0.8.0-1stretch) stretch; urgency=high
+
+  * fixing a serious issue with vectors which are too large
+  * Contributors: Davide Faconti
+
+ -- Davide Faconti <faconti@icarustechnology.com>  Tue, 29 Aug 2017 22:00:00 -0000
+
+ros-melodic-ros-type-introspection (0.7.1-1stretch) stretch; urgency=high
+
+  * ros Time and Duration fixed
+  * tests fixed
+  * important API Change
+  * might fix issue reported in #5 <https://github.com/facontidavide/ros_type_introspection/issues/5>. print_number made public
+  * adding inline to fix compilation error #4 <https://github.com/facontidavide/ros_type_introspection/issues/4>
+  * maintain nanosecond precision for time/duration
+  * Contributors: Davide Faconti, Ian Taylor
+
+ -- Davide Faconti <faconti@icarustechnology.com>  Mon, 28 Aug 2017 22:00:00 -0000
+
+ros-melodic-ros-type-introspection (0.6.3-1stretch) stretch; urgency=high
+
+  * speed up
+  * yet another bug fixed
+  * considerable speed improvement
+  * Contributors: Davide Faconti
+
+ -- Davide Faconti <faconti@icarustechnology.com>  Sun, 25 Jun 2017 22:00:00 -0000
+
+ros-melodic-ros-type-introspection (0.6.2-1stretch) stretch; urgency=high
+
+  * bug fix. types where missing in conversion
+  * Contributors: Davide Faconti
+
+ -- Davide Faconti <faconti@icarustechnology.com>  Thu, 22 Jun 2017 22:00:00 -0000
+
+ros-melodic-ros-type-introspection (0.6.1-1stretch) stretch; urgency=high
+
+  * fixed a bug in resize
+  * potential compilation problem fixed
+  * Contributors: Davide Faconti
+
+ -- Davide Faconti <faconti@icarustechnology.com>  Wed, 21 Jun 2017 22:00:00 -0000
+
+ros-melodic-ros-type-introspection (0.6.0-1stretch) stretch; urgency=high
+
+  * moved the deserializing code
+  * new API
+  * fixing issue in resize (to be tested)
+  * fixed osx compilation failure due to implicit_instantiation of std::array
+  * Fix formating and typos
+  * Contributors: Bo Li, Davide Faconti, Sam Pfeiffer
+
+ -- Davide Faconti <faconti@icarustechnology.com>  Mon, 19 Jun 2017 22:00:00 -0000
+
+ros-melodic-ros-type-introspection (0.5.1-1stretch) stretch; urgency=high
+
+  * fix the test
+  * fix tests?
+  * compilation fix
+  * typo fix
+  * test fixed
+  * Contributors: Davide Faconti
+
+ -- Davide Faconti <faconti@icarustechnology.com>  Sat, 01 Apr 2017 22:00:00 -0000
+
+ros-melodic-ros-type-introspection (0.5.0-1stretch) stretch; urgency=high
+
+  * toStr changed
+  * Contributors: Davide Faconti
+
+ -- Davide Faconti <faconti@icarustechnology.com>  Fri, 24 Mar 2017 23:00:00 -0000
+
+ros-melodic-ros-type-introspection (0.4.3-1stretch) stretch; urgency=high
+
+  * FIX: bug found in cache. reverting the recent change
+  * Contributors: davide
+
+ -- Davide Faconti <faconti@icarustechnology.com>  Sun, 12 Feb 2017 23:00:00 -0000
+
+ros-melodic-ros-type-introspection (0.4.1-1stretch) stretch; urgency=high
+
+  * COSMETIC: more consistent code
+  * considerable speed improvement in applyNameTransform
+  * Contributors: Davide Faconti
+
+ -- Davide Faconti <faconti@icarustechnology.com>  Wed, 08 Feb 2017 23:00:00 -0000
+
+ros-melodic-ros-type-introspection (0.4.0-1stretch) stretch; urgency=high
+
+  * critical bug fixed
+  * remove compilation warnings
+  * Update README.md
+  * Contributors: Davide Faconti
+
+ -- Davide Faconti <faconti@icarustechnology.com>  Sun, 05 Feb 2017 23:00:00 -0000
+
+ros-melodic-ros-type-introspection (0.3.3-1stretch) stretch; urgency=high
+
+  * removed serious bug that might cause double free
+  * Contributors: davide
+
+ -- Davide Faconti <faconti@icarustechnology.com>  Thu, 03 Nov 2016 23:00:00 -0000
+
+ros-melodic-ros-type-introspection (0.3.2-1stretch) stretch; urgency=high
+
+  * fixing tests (EXPECTED_EQ is more informative)
+  * changed the type of ROSType::baseName() and added SString::toStdString()
+
+ -- Davide Faconti <faconti@icarustechnology.com>  Tue, 25 Oct 2016 22:00:00 -0000
+
+ros-melodic-ros-type-introspection (0.3.1-1stretch) stretch; urgency=high
+
+  * added BSD license
+  * added an alternative implementation of ShapeShifter
+
+ -- Davide Faconti <faconti@icarustechnology.com>  Wed, 19 Oct 2016 22:00:00 -0000
+
+ros-melodic-ros-type-introspection (0.3.0-1stretch) stretch; urgency=high
+
+  * Doxygen added
+  * Moved to gtests instead of Catch.
+  * Final API (?)
+
+ -- Davide Faconti <faconti@icarustechnology.com>  Sun, 16 Oct 2016 22:00:00 -0000
+
+ros-melodic-ros-type-introspection (0.2.0-1stretch) stretch; urgency=high
+
+  * All unit tests pass, but coverage is not very high.
+  * By default is uses the custom string implementation.
+  * Stable (?) API
+
+ -- Davide Faconti <faconti@icarustechnology.com>  Sun, 16 Oct 2016 22:00:00 -0000
+
+
