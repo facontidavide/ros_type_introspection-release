@@ -328,6 +328,17 @@ void Parser::applyVisitorToBuffer(const std::string &msg_identifier,
   recursiveImpl( msg_info->message_tree.croot() );
 }
 
+template <typename Container> inline
+void ExpandVectorIfNecessary(Container& container, size_t new_size)
+{
+    if( container.size() <= new_size)
+    {
+        const size_t increased_size = std::max( size_t(32), container.size() * 2);
+        container.resize( increased_size );
+    }
+}
+
+
 bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
                                           Span<uint8_t> buffer,
                                           FlatMessage* flat_container,
@@ -341,7 +352,6 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
   size_t name_index = 0;
   size_t blob_index = 0;
   size_t blob_storage_index = 0;
-
 
   if( msg_info == nullptr)
   {
@@ -398,12 +408,9 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
 
       if( IS_BLOB ) // special case. This is a "blob", typically an image, a map, pointcloud, etc.
       {
-        if( flat_container->blob.size() <= blob_index)
-        {
-          const size_t increased_size = std::max( size_t(32), flat_container->blob.size() *  3/2);
-          flat_container->blob.resize( increased_size );
-        }
-        if( buffer_offset + array_size > buffer.size() )
+        ExpandVectorIfNecessary( flat_container->blob, blob_index);
+
+        if( buffer_offset + array_size > static_cast<std::size_t>(buffer.size()) )
         {
           throw std::runtime_error("Buffer overrun in deserializeIntoFlatContainer (blob)");
         }
@@ -415,11 +422,7 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
 
           if( _blob_policy == STORE_BLOB_AS_COPY)
           {
-            if( flat_container->blob_storage.size() <= blob_storage_index)
-            {
-              const size_t increased_size = std::max( size_t(8), flat_container->blob_storage.size() * 2);
-              flat_container->blob_storage.resize( increased_size );
-            }
+            ExpandVectorIfNecessary( flat_container->blob_storage, blob_storage_index);
 
             auto& storage = flat_container->blob_storage[blob_storage_index];
             storage.resize(array_size);
@@ -439,7 +442,7 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
         bool DO_STORE_ARRAY = DO_STORE;
         for (int i=0; i<array_size; i++ )
         {
-          if( DO_STORE_ARRAY && i >= max_array_size )
+          if( DO_STORE_ARRAY && i >= static_cast<int32_t>(max_array_size) )
           {
               DO_STORE_ARRAY = false;
           }
@@ -451,27 +454,35 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
 
           if( field_type.typeID() == STRING )
           {
-            if( flat_container->name.size() <= name_index)
+            ExpandVectorIfNecessary( flat_container->name, name_index);
+
+            uint32_t string_size = 0;
+            ReadFromBuffer( buffer, buffer_offset, string_size );
+
+            if( buffer_offset + string_size > static_cast<std::size_t>(buffer.size()))
             {
-              const size_t increased_size = std::max( size_t(32), flat_container->name.size() *  3/2);
-              flat_container->name.resize( increased_size );
+                throw std::runtime_error("Buffer overrun in RosIntrospection::ReadFromBuffer");
             }
-            std::string& name = flat_container->name[name_index].second;//read directly inside an existing std::string
-            ReadFromBuffer<std::string>( buffer, buffer_offset, name );
 
             if( DO_STORE_ARRAY )
             {
+              if( string_size == 0)
+              {
+                // corner case, when there is an empty string at the end of the message
+                flat_container->name[name_index].second.clear();
+              }
+              else{
+                const char* buffer_ptr = reinterpret_cast<const char*>( buffer.data() + buffer_offset );
+                flat_container->name[name_index].second.assign( buffer_ptr, string_size );
+              }
               flat_container->name[name_index].first = new_tree_leaf ;
               name_index++;
             }
+            buffer_offset += string_size;
           }
           else if( field_type.isBuiltin() )
           {
-            if( flat_container->value.size() <= value_index)
-            {
-              const size_t increased_size = std::max( size_t(32), flat_container->value.size() *  3/2);
-              flat_container->value.resize( increased_size );
-            }
+            ExpandVectorIfNecessary( flat_container->value, value_index);
 
             Variant var = ReadFromBufferToVariant( field_type.typeID(),
                                                    buffer,
@@ -514,7 +525,7 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
   flat_container->blob.resize( blob_index );
   flat_container->blob_storage.resize( blob_storage_index );
 
-  if( buffer_offset != buffer.size() )
+  if( buffer_offset != static_cast<std::size_t>(buffer.size()) )
   {
       char msg_buff[1000];
       sprintf(msg_buff, "buildRosFlatType: There was an error parsing the buffer.\n"
@@ -642,7 +653,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
         if( pattern_array_pos>= 0) // -1 if pattern doesn't match
         {
-          const std::string* new_name = nullptr;
+          boost::string_ref new_name;
 
           for (size_t n=0; n < num_names; n++)
           {
@@ -654,14 +665,14 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
               if( alias_leaf.index_array[ _alias_array_pos[n] ] ==
                   leaf.index_array[ pattern_array_pos] )
               {
-                new_name =  &(it.second);
+                new_name = it.second;
                 break;
               }
             }
           }
 
           //--------------------------
-          if( new_name )
+          if( !new_name.empty() )
           {
             boost::container::static_vector<boost::string_ref, 12> concatenated_name;
 
@@ -693,7 +704,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
               if( isSubstitutionPlaceholder(str_val) )
               {
-                concatenated_name.push_back( *new_name );
+                concatenated_name.push_back( new_name );
                 position--;
               }
               else{ concatenated_name.push_back( str_val ); }

@@ -2,6 +2,14 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.0.3 (2019-10-30)
+------------------
+* critical bug fix
+* fix warning
+  Fix sign comparison warnings
+* Fixed -Wsign-compare warnings
+* Contributors: Davide Faconti, Jarvis Schultz
+
 2.0.2 (2019-10-01)
 ------------------
 * speed optimization (fix regression in 2.0)
