@@ -99,14 +99,14 @@ void CreateStringFromTreeLeaf(const StringTreeLeaf& leaf, bool skip_root, std::s
     leaf_node = leaf_node->parent();
     if( !( leaf_node == nullptr && skip_root) )
     {
-        strings_chain.push_back( &str );
+        strings_chain.emplace_back( &str );
         const size_t S = str.size();
         if( S == 1 && str[0] == '#' )
         {
             total_size += 5; // super conservative
         }
         else{
-            total_size += S+1;
+          total_size += S+1;
         }
     }
   };
