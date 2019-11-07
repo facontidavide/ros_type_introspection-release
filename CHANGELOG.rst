@@ -2,6 +2,11 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.0.4 (2019-11-07)
+------------------
+* Fix bug reported in plotjuggler
+* Contributors: Davide Faconti
+
 2.0.3 (2019-10-30)
 ------------------
 * critical bug fix
