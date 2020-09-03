@@ -1,3 +1,26 @@
+## ros_type_introspection (noetic) - 2.1.0-1
+
+The packages in the `ros_type_introspection` repository were released into the `noetic` distro by running `/usr/bin/bloom-release --ros-distro noetic ros_type_introspection -y` on `Thu, 03 Sep 2020 11:54:29 -0000`
+
+The `ros_type_introspection` package was released.
+
+Version of package(s) in repository `ros_type_introspection`:
+
+- upstream repository: https://github.com/facontidavide/ros_type_introspection.git
+- release repository: unknown
+- rosdistro version: `null`
+- old version: `null`
+- new version: `2.1.0-1`
+
+Versions of tools used:
+
+- bloom version: `0.9.8`
+- catkin_pkg version: `0.4.22`
+- rosdep version: `0.19.0`
+- rosdistro version: `0.8.2`
+- vcstools version: `0.1.42`
+
+
 ## ros_type_introspection (melodic) - 2.1.0-2
 
 The packages in the `ros_type_introspection` repository were released into the `melodic` distro by running `/usr/bin/bloom-release --ros-distro melodic ros_type_introspection -y` on `Thu, 03 Sep 2020 11:00:27 -0000`
